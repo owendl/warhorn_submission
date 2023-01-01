@@ -115,15 +115,14 @@ create_slot_get_id<- function(l){
     return("ERROR: missing one of required fields for create_slot_get_id: ", paste(needed_fields, collapse=", "), sep="")
   }
   
-  start = get_datetime_str(l[[needed_fields[1]]]
+  start = add_tz_to_datetime_str(get_datetime_str(l[[needed_fields[1]]]
                            ,l[[needed_fields[2]]]
-                           )
+                           ))
   
-  end = get_end_datetime_str(l[[needed_fields[1]]]
+  end = add_tz_to_datetime_str(get_end_datetime_str(l[[needed_fields[1]]]
                          ,l[[needed_fields[2]]]
                          ,l[[needed_fields[3]]]
-                        )
-  
+                        ))
   create_slot = "
   mutation (
           $startsat :  ISO8601DateTime!,
@@ -164,7 +163,7 @@ create_slot_get_id<- function(l){
 create_scenario_get_id<- function(l){
   
   needed_fields = c(
-    "Session.Name..for.Event.Advertising."
+    "Title.of.Your.Event"
     ,"A.Short.Overview.of.Your.Event..Less.than.200.words.please.."
     ,"game_id"
   )
@@ -172,6 +171,8 @@ create_scenario_get_id<- function(l){
   if(fields_missing(l, needed_fields)){
     return("ERROR: missing one of required fields for create_scenario_get_id: ", paste(needed_fields, collapse=", "), sep="")
   }
+  
+  # TODO need to check if scenario already exists eventScenarioOfferings query, iterate through
   
   create_scenario = "
 mutation (
@@ -191,6 +192,7 @@ mutation (
           
           }
 "
+
   variables = list(eventid = event_id, 
                    gamesystemid = l[[needed_fields[3]]],
                    name = l[[needed_fields[1]]], 
@@ -218,7 +220,7 @@ create_event_session<- function(l){
                     )
   
   if(fields_missing(l, needed_fields)){
-    return("ERROR: missing one of required fields for create_event_session: ", paste(needed_fields, collapse=", "), sep="")
+    return(paste("ERROR: missing one of required fields for create_event_session: ", paste(needed_fields, collapse=", "), sep=""))
   }
   
   session_query = "
@@ -227,10 +229,10 @@ create_event_session<- function(l){
         ,$tablecount: Int!
         ,$tablesize: Int!
         ) {
-  createEventSession(input: {slotId: $slotId
-                    ,scenarioId: $scenarioId
-                    ,tableCount: $tableCount
-                    ,tableSize: $tableSize
+  createEventSession(input: {slotId: $slotid
+                    ,scenarioId: $scenarioid
+                    ,tableCount: $tablecount
+                    ,tableSize: $tablesize
                     }){
                     session{
                     id
@@ -240,7 +242,7 @@ create_event_session<- function(l){
  "
   variables = list(slotid = l[[needed_fields[3]]], 
                    scenarioid = l[[needed_fields[2]]], 
-                   tableSize = l[[needed_fields[1]]], 
+                   tablesize = l[[needed_fields[1]]], 
                    tablecount = 1)
   r = submit_warhorn(session_query, variables)
   
@@ -286,7 +288,7 @@ add_tz_to_datetime_str<- function(date_time){
   return(paste(date_time, "-05:00", sep=""))
 }
 
-fields_missing<- function(l){
+fields_missing<- function(l, vec){
   all_present = TRUE
   for(v in vec){
     if(is.null(l[[v]])){
