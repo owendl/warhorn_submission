@@ -40,3 +40,6 @@ vignettes/*.pdf
 
 # Credentials
 warhorn_creds.json
+
+# data
+*.csv
