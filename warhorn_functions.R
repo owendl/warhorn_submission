@@ -118,7 +118,6 @@ create_slot_get_id<- function(l){
   start = add_tz_to_datetime_str(get_datetime_str(l[[needed_fields[1]]]
                            ,l[[needed_fields[2]]]
                            ))
-  
   end = add_tz_to_datetime_str(get_end_datetime_str(l[[needed_fields[1]]]
                          ,l[[needed_fields[2]]]
                          ,l[[needed_fields[3]]]
@@ -392,13 +391,21 @@ get_datetime_str <- function(raw_date, time){
   time = format(strptime(time, "%I:%M:%S %p"), format="%H:%M:%S")
   
   date_time = paste(date, time, sep = "T")
+  pos = as.POSIXct(date_time, 
+             tz="America/New_York",
+             format = "%Y-%m-%dT%H:%M:%S")
+  
+  # manual conversion to pacific time
+  pos = pos - 3*3600
+  date_time = format(pos, format = "%Y-%m-%dT%H:%M:%S")
+  
   return(date_time)
 }
 
 get_end_datetime_str<- function(date, time, duration){
   start = get_datetime_str(date, time)
   start_pos = as.POSIXct(start, 
-                         tz="America/New_York",
+                         tz="America/Los_Angeles",
                          format = "%Y-%m-%dT%H:%M:%S")
   end_pos = start_pos + 3600*duration
   end = format(end_pos, format = "%Y-%m-%dT%H:%M:%S")
@@ -406,7 +413,8 @@ get_end_datetime_str<- function(date, time, duration){
 }
 
 add_tz_to_datetime_str<- function(date_time){
-  return(paste(date_time, "-05:00", sep=""))
+  # warhorn datetime string has a colon in it, easier to just manually add it here
+  return(paste(date_time, "-08:00", sep=""))
 }
 
 fields_missing<- function(l, vec){
