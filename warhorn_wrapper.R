@@ -2,6 +2,7 @@
 
 source("warhorn_functions.R")
 event_id = get_event_id(warhorn_creds$event_str)
+gm_role_id = get_gm_role_id(warhorn_creds$event_str)
 
 df = read.csv("gm_responses.csv", stringsAsFactors = FALSE)
 

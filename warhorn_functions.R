@@ -314,15 +314,15 @@ get_registration_id<-function(email, slug){
     }
   }
 '
-data = content(submit_warhorn(get_registration_query, list(slug = slug,
-                                                   email = email)
-                      )
-               )
-if(is.null(data$data$eventRegistration)){
-  return(NULL)
-}else{
-  return(data$data$eventRegistration$id)
-}
+  data = content(submit_warhorn(get_registration_query, list(slug = slug,
+                                                     email = email)
+                        )
+                 )
+  if(is.null(data$data$eventRegistration)){
+    return(NULL)
+  }else{
+    return(data$data$eventRegistration$id)
+  }
 
 }
 
@@ -334,7 +334,7 @@ assign_gm_role<-function(l){
     return(paste("ERROR: missing one of required fields for assign_gm_role: ", paste(needed_fields, collapse=", "), sep=""))
   }
   
-  gm_role_id = get_gm_role_id(warhorn_creds$event_str)
+  
   registration_id = get_registration_id(l[[needed_fields[1]]], 
                                         warhorn_creds$event_str)
   
