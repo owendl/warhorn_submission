@@ -174,6 +174,29 @@ create_scenario_get_id<- function(l){
   
   # TODO need to check if scenario already exists eventScenarioOfferings query, iterate through
   
+  event_scenarios = '
+  query($slug: String!){
+  eventScenarioOfferings(slug: $slug){
+    nodes{
+      scenario{
+        name,
+        id
+      }
+    }
+  }
+  }
+'
+  
+  e = submit_warhorn(event_scenarios, list(slug = warhorn_creds$event_str))
+  e = content(e)
+  for(d in e$data$eventScenarioOfferings$nodes){
+    if(d$scenario$name == l[[needed_fields[1]]]){
+      l[["scenario_id"]] = d$scenario$id
+      return(l) 
+    }
+    
+  }
+  
   create_scenario = "
 mutation (
           $eventid : ID!
@@ -256,6 +279,104 @@ create_event_session<- function(l){
     return(paste("ERROR: failed to get create session id", data$errors[[1]]$message, sep=": "))
   }
 }
+
+
+get_gm_role_id<-function(event_str){
+  event_roles= 'query($slug: String!){
+     event(slug: $slug){
+      id,
+      roles{
+        id,
+        name
+      }
+    }
+    }
+'
+  data = submit_warhorn(event_roles, list(slug = event_str))
+  data = content(data)
+  for(d in data$data$event$roles){
+    if(d$name =="GM"){
+      return(d$id)
+    }
+  }
+}
+
+
+get_registration_id<-function(email, slug){
+  get_registration_query='
+  query($slug: String!, email: String!){
+    eventRegistration(slug: $slug, email: $email){
+      id,
+      roles{
+        id,
+        name
+        }
+      }
+    }
+  }
+'
+data = content(submit_warhorn(get_registration_query, list(slug = slug,
+                                                   email = email)
+                      )
+               )
+if(is.null(data$data$eventRegistration)){
+  return(NULL)
+}else{
+  return(data$data$eventRegistration$id)
+}
+
+}
+
+assign_gm_role<-function(l){
+  
+  needed_fields = c("Preferred.E.mail.Address")
+  
+  if(fields_missing(l, needed_fields)){
+    return(paste("ERROR: missing one of required fields for assign_gm_role: ", paste(needed_fields, collapse=", "), sep=""))
+  }
+  
+  gm_role_id = get_gm_role_id(warhorn_creds$event_str)
+  registration_id = get_registration_id(l[[needed_fields[1]]], 
+                                        warhorn_creds$event_str)
+  
+  assign_role_query='
+  mutation ($registraion_id: ID!,
+                    $role_id: ID!){
+            assignRegistrationRole(input:{
+                registrationId: $registration_id,
+                roleId: role_id}){
+                  registration{
+                  registrant{
+                      email
+                      },
+                  roles{
+                      name
+                      }
+                  }
+                
+                }
+          }
+'
+
+  r = submit_warhorn(assign_role_query, list(registration_id = registration_id,
+                                             role_id = gm_role_id)
+                     )
+  
+  if(r$status_code==200){
+    data = content(r)
+    roles=c()
+    for(d in data$data$registration$roles){
+      roles= append(roles, d$name)
+    }
+    role_string = paste(data$data$registration$registrant$email, paste(roles, collapse = ", "), sep = "has roles: ")
+    l[["roles"]]=role_string
+    return(l)
+  } 
+  else{
+    return(paste("ERROR: failed to assign gm role", data$errors[[1]]$message, sep=": "))
+  }
+}
+
 
 get_datetime_str <- function(raw_date, time){
   

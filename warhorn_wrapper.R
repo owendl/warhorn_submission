@@ -11,13 +11,14 @@ func_list<- list(get_gamesystem
                  ,create_scenario_get_id
                  ,create_slot_get_id
                  ,create_event_session
+                 ,assign_gm_role
                  )
 func_count = length(func_list)
 
 error_list = list()
 
 
-for(i in 2:2){
+for(i in 1:nrow(df)){
   
   entry = as.list(df[i,])
   
@@ -37,6 +38,7 @@ for(i in 2:2){
     func_i = func_i + 1
   }
 
+  
   
   
 }
