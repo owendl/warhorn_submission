@@ -38,6 +38,27 @@ get_event_id<-function(event_slug){
   }
 }
 
+get_gm_role_id<-function(event_str){
+  event_roles= 'query($slug: String!){
+     event(slug: $slug){
+      id,
+      roles{
+        id,
+        name
+      }
+    }
+    }
+'
+  data = submit_warhorn(event_roles, list(slug = event_str))
+  data = content(data)
+  for(d in data$data$event$roles){
+    if(d$name =="GM"){
+      return(d$id)
+    }
+  }
+}
+
+
 get_gamesystem<-function(l){
   
   needed_fields = c("Game.System")
@@ -280,25 +301,6 @@ create_event_session<- function(l){
 }
 
 
-get_gm_role_id<-function(event_str){
-  event_roles= 'query($slug: String!){
-     event(slug: $slug){
-      id,
-      roles{
-        id,
-        name
-      }
-    }
-    }
-'
-  data = submit_warhorn(event_roles, list(slug = event_str))
-  data = content(data)
-  for(d in data$data$event$roles){
-    if(d$name =="GM"){
-      return(d$id)
-    }
-  }
-}
 
 
 get_registration_id<-function(email, slug){
