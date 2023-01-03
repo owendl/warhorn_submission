@@ -143,6 +143,31 @@ create_slot_get_id<- function(l){
                          ,l[[needed_fields[2]]]
                          ,l[[needed_fields[3]]]
                         ))
+  
+  get_current_slots = '
+  query($slug: String!){
+    event(slug: $slug){
+      slots{
+        nodes{
+          id
+          ,startsAt
+          ,endsAt
+        }
+      }
+  }
+  }
+  '
+  slots = content(submit_warhorn(get_current_slots, list(slug = warhorn_creds$event_str)))
+  
+  current_slots = slots$data$event$slots$nodes
+  
+  for(slot in current_slots){
+    if(slot$startsAt == start && slot$endsAt == end){
+      l[["slot_id"]] = slot$id
+      return(l)
+    }
+  }
+  
   create_slot = "
   mutation (
           $startsat :  ISO8601DateTime!,
@@ -330,7 +355,7 @@ get_registration_id<-function(email, slug){
 
 assign_gm_role<-function(l){
   
-  needed_fields = c("Preferred.E.mail.Address")
+  needed_fields = c("GM.s.Warhorn.E.mail.Address")
   
   if(fields_missing(l, needed_fields)){
     return(paste("ERROR: missing one of required fields for assign_gm_role: ", paste(needed_fields, collapse=", "), sep=""))
@@ -339,6 +364,10 @@ assign_gm_role<-function(l){
   
   registration_id = get_registration_id(l[[needed_fields[1]]], 
                                         warhorn_creds$event_str)
+  if(is.null(registration_id)){
+    return(paste("ERROR: gm not registered for event", l[[needed_fields[1]]], sep=": "))
+  }
+  
   
   assign_role_query='
   mutation ($registraion_id: ID!,

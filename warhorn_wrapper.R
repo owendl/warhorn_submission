@@ -34,7 +34,7 @@ for(i in 1:nrow(df)){
       no_errors = FALSE
       error_entry = as.list(df[i,])
       error_entry[["error"]] = entry
-      error_list = append(error_list, error_entry)
+      error_list = append(error_list, list(error_entry))
     }
     func_i = func_i + 1
   }
